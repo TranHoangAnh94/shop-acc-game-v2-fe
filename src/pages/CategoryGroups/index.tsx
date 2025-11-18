@@ -80,11 +80,12 @@ export default function CategoryGroupsPage() {
                                 </Link>
 
                                 <div className="flex justify-center p-3">
-                                    <Link
-                                        to={`/group/${idVal}/accounts`}
-                                        className="text-primary flex items-center gap-2 rounded-full bg-[#0a6aff14] px-4 py-2 text-xs font-medium transition-all duration-200 hover:transform-[translateX(4px)] hover:bg-[#0a6aff26] md:text-sm"
-                                    >
-                                        Xem tất cả
+                                    <Link to={`/group/${idVal}/accounts`} className="block">
+                                        <img
+                                            src="/images/icons/ViewAllIcon.gif"
+                                            alt="Xem tất cả"
+                                            className="mt-2 w-[137px] object-cover"
+                                        />
                                     </Link>
                                 </div>
                             </div>
