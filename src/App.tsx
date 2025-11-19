@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import AccountPage from "./pages/Account";
 import AddUserPage from "./pages/Account/AddUser";
 import AddAccountPage from "./pages/Account/AddAccount";
+import EditAccountPage from "./pages/Account/EditAccount";
 
 const queryClient = new QueryClient();
 const App = () => {
@@ -36,6 +37,7 @@ const App = () => {
                         </Route>
                         <Route path="/admin/add-user" element={<AddUserPage />} />
                         <Route path="/admin/add-account" element={<AddAccountPage />} />
+                        <Route path="/admin/edit-account/:id" element={<EditAccountPage />} />
                     </Routes>
                 </QueryClientProvider>
             </Suspense>

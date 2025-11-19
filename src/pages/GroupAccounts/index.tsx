@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { formatNumber } from "~/utils/functions";
+import HeadLine from "~/components/Headline";
+import { TiStar } from "react-icons/ti";
 
 // stable price ranges (values in VND)
 const PRICE_RANGES: { key: string; label: string; min: number; max?: number }[] = [
@@ -98,7 +100,7 @@ export default function GroupAccountsPage() {
                     if (price < range.min) return false;
                 }
             }
-            const name = String(a["accountName"] ?? "").toLowerCase();
+            const name = String(a["name"]).toLowerCase();
             if (search && !name.includes(search.toLowerCase())) return false;
             return true;
         });
@@ -110,128 +112,114 @@ export default function GroupAccountsPage() {
     }
 
     return (
-        <div>
-            <div
-                className="relative flex min-h-[70vh] flex-col overflow-hidden md:flex-row"
-                style={{
-                    backgroundImage: "url('/images/OIP.webp')",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                }}
-            >
-                <div className="pointer-events-none absolute inset-0 bg-black/50" />
-                <aside className="ga-sidebar relative z-10 overflow-hidden bg-[#1a1f3a] md:h-screen">
-                    <div className="mt-6 mb-4 ml-2 text-lg font-semibold text-[#00c8ff] uppercase">🎮 Bộ Lọc</div>
+        <div className="px-4 py-6">
+            <HeadLine title="Tài Khoản Game" url="" type="account" />
 
-                    <div className="mb-4">
-                        <label className="mt-10 mb-2 ml-2 block text-center text-[#b0b8d4] uppercase">Khoảng Giá</label>
-                        <div>
-                            <select
-                                value={priceRange}
-                                onChange={(e) => setPriceRange(e.target.value)}
-                                className="w-full rounded-md border border-[#2a3150] bg-[#0f1426] px-3 py-2 text-white"
-                            >
-                                {PRICE_RANGES.map((r) => (
-                                    <option key={r.key} value={r.key}>
-                                        {r.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
+            {/* Filter Section */}
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-wrap items-center gap-3">
+                    <label className="text-sm font-semibold">Khoảng Giá:</label>
+                    <select
+                        value={priceRange}
+                        onChange={(e) => setPriceRange(e.target.value)}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
+                        {PRICE_RANGES.map((r) => (
+                            <option key={r.key} value={r.key}>
+                                {r.label}
+                            </option>
+                        ))}
+                    </select>
                     <button
                         onClick={resetFilters}
-                        className="mt-2 w-full rounded border border-[#00c8ff] bg-transparent px-3 py-2 text-[#00c8ff]"
+                        className="rounded-lg border border-blue-500 bg-transparent px-4 py-2 text-sm font-medium text-blue-500 transition hover:bg-blue-50"
                     >
-                        Đặt Lại Bộ Lọc
+                        Đặt Lại
                     </button>
-                </aside>
-                <div className="relative z-10 flex flex-1 flex-col">
-                    <header className="border-b border-[#2a3150] bg-[#1a1f3a] p-5">
-                        <div className="mb-3 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-[#00c8ff]">Tài Khoản Game</h2>
-                            <div className="flex items-center gap-3">
-                                <input
-                                    placeholder="Tìm kiếm tài khoản..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="rounded-md border border-[#2a3150] bg-[#0f1426] px-3 py-2 text-white"
-                                />
-                                <div className="text-sm text-[#b0b8d4]">
-                                    Hiển thị <strong className="text-white">{filtered.length}</strong> tài khoản
-                                </div>
-                            </div>
-                        </div>
-                    </header>
-
-                    <div className="min-h-0 flex-1 overflow-y-auto p-5" style={{ maxHeight: "calc(100vh - 80px)" }}>
-                        {loading ? (
-                            <p>Đang tải tài khoản...</p>
-                        ) : error ? (
-                            <p className="text-red-500">Lỗi: {error}</p>
-                        ) : filtered.length === 0 ? (
-                            <p>Không có tài khoản phù hợp.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                                {filtered.map((a, idx) => {
-                                    const imgs = parseImages(a as Record<string, unknown>);
-                                    const thumb = (() => {
-                                        const t = String(a["thumb"] ?? "").trim();
-                                        if (t) return t;
-                                        if (imgs.length) return imgs[0];
-                                        return "";
-                                    })();
-                                    const title = String(
-                                        (a as Record<string, unknown>)["accountName"] ??
-                                            (a as Record<string, unknown>)["title"] ??
-                                            "Không tên",
-                                    );
-                                    const price = Number((a as Record<string, unknown>)["price"] ?? 0) || 0;
-                                    return (
-                                        <div
-                                            key={String((a as Record<string, unknown>).id ?? `no-id-${idx}`)}
-                                            className="transform overflow-hidden rounded-lg border border-[#2a3150] bg-[#1a1f3a] transition hover:-translate-y-1 hover:border-[#00c8ff] hover:shadow-lg"
-                                        >
-                                            <div className="relative flex h-40 items-center justify-center overflow-hidden from-[#1a1f3a] to-[#252d4a]">
-                                                <img
-                                                    src={getImageUrl(thumb) || "/images/OIP.webp"}
-                                                    alt={title}
-                                                    className="h-full w-full object-cover"
-                                                    onError={(e) => {
-                                                        const img = e.target as HTMLImageElement;
-                                                        if (!img || typeof img.src !== "string") return;
-                                                        if (img.src.includes("default-card.png")) return;
-                                                        img.src = "/images/default-card.png";
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="p-3">
-                                                <div className="truncate text-sm font-bold text-white" title={title}>
-                                                    {title}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between border-t border-[#2a3150] px-3 py-2">
-                                                <Link
-                                                    to={`/accounts/${String((a as Record<string, unknown>).id)}`}
-                                                    state={{ account: a }}
-                                                    className="rounded-md bg-[#00c8ff] px-3 py-1 font-bold text-[#071028]"
-                                                >
-                                                    Chi tiết
-                                                </Link>
-                                                <div className="font-extrabold text-[#00c8ff]">
-                                                    {formatNumber(price)} ₫
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                </div>
+                <div className="flex items-center gap-3">
+                    <input
+                        placeholder="Tìm kiếm tài khoản..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                    <div className="text-sm text-gray-600">
+                        Hiển thị <strong className="text-blue-600">{filtered.length}</strong> tài khoản
                     </div>
                 </div>
             </div>
+
+            {loading ? (
+                <p className="p-4 text-center">Đang tải tài khoản...</p>
+            ) : error ? (
+                <p className="p-4 text-center text-red-600">Lỗi: {error}</p>
+            ) : filtered.length === 0 ? (
+                <p className="p-4 text-center">Không có tài khoản phù hợp.</p>
+            ) : (
+                <div className="grid grid-cols-2 gap-x-1.5 gap-y-6 md:grid-cols-3 md:gap-x-2.5 lg:grid-cols-4">
+                    {filtered.map((a, idx) => {
+                        const imgs = parseImages(a as Record<string, unknown>);
+                        const thumb = (() => {
+                            const t = String(a["thumb"] ?? "").trim();
+                            if (t) return t;
+                            if (imgs.length) return imgs[0];
+                            return "";
+                        })();
+                        const title = String((a as Record<string, unknown>)["name"] ?? "Không có tên");
+                        const price = Number((a as Record<string, unknown>)["price"] ?? 0) || 0;
+                        const accountId = String((a as Record<string, unknown>).id ?? "");
+
+                        return (
+                            <div
+                                key={accountId || `no-id-${idx}`}
+                                className="border-primary relative flex flex-col overflow-hidden rounded-lg border shadow-[0_10px_20px_rgba(0,0,0,0.05)] duration-200 hover:transform-[translateY(-4px)] hover:bg-[#e8f0ff] hover:shadow-[0_10px_25px_rgba(10,106,255,0.12)]"
+                            >
+                                {idx <= 2 && (
+                                    <span className="game-item_top hidden md:block">
+                                        <TiStar className="mx-auto text-lg" />
+                                        <span className="block text-xs">Top {idx + 1}</span>
+                                    </span>
+                                )}
+
+                                <Link to={`/accounts/${accountId}`} state={{ account: a }} className="block">
+                                    <img
+                                        src={getImageUrl(thumb) || "/images/OIP.webp"}
+                                        alt={title}
+                                        className="aspect-video w-full object-cover transition-all duration-200"
+                                        onError={(e) => {
+                                            const img = e.target as HTMLImageElement;
+                                            if (!img || typeof img.src !== "string") return;
+                                            if (img.src.includes("default-card.png")) return;
+                                            img.src = "/images/default-card.png";
+                                        }}
+                                    />
+                                    <div className="flex h-full flex-col items-center justify-between bg-white px-2 py-3 text-xs md:mt-0 md:px-2 md:py-5 md:text-sm">
+                                        <div className="ht-flex-center flex-col gap-2">
+                                            <h2 className="text-center text-sm font-bold md:line-clamp-2 md:text-base md:hover:line-clamp-none">
+                                                {title}
+                                            </h2>
+                                            <div className="mt-2 font-extrabold text-blue-600">
+                                                {formatNumber(price)} ₫
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+
+                                <div className="flex justify-center border-t border-gray-100 p-3">
+                                    <Link to={`/accounts/${accountId}`} state={{ account: a }} className="block">
+                                        <img
+                                            src="/images/icons/ViewAllIcon.gif"
+                                            alt="Xem chi tiết"
+                                            className="w-[137px] object-cover"
+                                        />
+                                    </Link>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

@@ -23,7 +23,7 @@ export default function CategoryGroupsPage() {
                     signal: controller.signal,
                 });
                 const data = await res.json();
-                const items = Array.isArray(data.result) ? data.result : [];
+                const items = data?.result?.data && Array.isArray(data.result.data) ? data.result.data : [];
                 setGroups(items as Array<Record<string, unknown>>);
             } catch (err) {
                 setError(err instanceof Error ? err.message : String(err));

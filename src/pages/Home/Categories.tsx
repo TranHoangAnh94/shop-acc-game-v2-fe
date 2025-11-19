@@ -17,8 +17,11 @@ interface CategoriesType {
     urlIconImage: string;
     type: "account" | "group" | "";
 }
+
 export default function Categories({ nameCategory, categories, url = "/", urlIconImage, type }: CategoriesType) {
+    
     return (
+        
         <div className="mb-20">
             <HeadLine title={nameCategory} url={url} type={type} />
             <div className="grid grid-cols-2 gap-x-1.5 gap-y-6 md:grid-cols-3 md:gap-x-2.5 lg:grid-cols-4">
@@ -63,8 +66,6 @@ export default function Categories({ nameCategory, categories, url = "/", urlIco
                                             )}
                                         </>
                                     )}
-
-                                    
                                 </div>
                             </div>
                             <img src={urlIconImage} alt="Xem tất cả" className="mt-2 w-[137px] object-cover" />

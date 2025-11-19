@@ -1,11 +1,7 @@
 import clsx from "clsx";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import {
-    FaRegUser,
-    FaFacebookF,
-    FaYoutube,
-} from "react-icons/fa";
+import { FaRegUser, FaFacebookF, FaYoutube } from "react-icons/fa";
 import { IoMdLogIn } from "react-icons/io";
 import { FiUserPlus } from "react-icons/fi";
 import { formatPhone } from "../utils/functions";
@@ -76,44 +72,71 @@ const Header = () => {
 
                     {/* Desktop Menu */}
                     <nav className="hidden gap-2 xl:flex">
-                        <NavLink href="/" active={url === "/"}>Trang chủ</NavLink>
-                        <NavLink href="/nap-tien" active={url === "/nap-tien"}>Uy tín của shop</NavLink>
-                        <NavLink href="/lich-su-mua-nick" active={url === "/lich-su-mua-nick"}>Cách mua acc</NavLink>
-                        <NavLink href="/thong-tin" active={url === "/thong-tin1"}>Cách bảo mật</NavLink>
-                        <NavLink href="/dong-tien" active={url === "/dong-tien"}>Nạp tiền</NavLink>
-                        <NavLink href="/tin-tuc" active={url === "/tin-tuc"}>Tin tức</NavLink>
+                        <NavLink href="/" active={url === "/"}>
+                            Trang chủ
+                        </NavLink>
+                        <NavLink href="/nap-tien" active={url === "/nap-tien"}>
+                            Uy tín của shop
+                        </NavLink>
+                        <NavLink href="/lich-su-mua-nick" active={url === "/lich-su-mua-nick"}>
+                            Cách mua acc
+                        </NavLink>
+                        <NavLink href="/thong-tin" active={url === "/thong-tin1"}>
+                            Cách bảo mật
+                        </NavLink>
+                        <NavLink href="/dong-tien" active={url === "/dong-tien"}>
+                            Nạp tiền
+                        </NavLink>
+                        <NavLink href="/tin-tuc" active={url === "/tin-tuc"}>
+                            Tin tức
+                        </NavLink>
                     </nav>
 
                     {/* Auth Buttons */}
-                    <div className="hidden gap-3 xl:flex relative">
+                    <div className="relative hidden gap-3 xl:flex">
                         {user ? (
                             <div
-                                className="relative"
+                                className="relative w-44"
                                 onMouseEnter={() => setUserDropdownOpen(true)}
                                 onMouseLeave={() => setUserDropdownOpen(false)}
                             >
                                 {/* Avatar + Name */}
-                                <div className="ht-flex-center cursor-pointer gap-2 rounded-lg bg-blue-50 px-4 py-2 font-semibold text-blue-600">
-                                    <img
-                                        src={user.avatar || "/images/default-avatar.png"}
-                                        alt="User"
-                                        className="h-7 w-7 rounded-full object-cover"
-                                    />
-                                    <span>{user.name}</span>
+                                <div className="flex w-full cursor-pointer items-center rounded-lg bg-blue-50 px-3 py-2 font-medium text-blue-600 transition-all duration-200 hover:bg-blue-100">
+                                    <div className="h-8 w-8 text-blue-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                        </svg>
+                                    </div>
+
+                                    <span className="truncate text-sm">{user.name || "Người dùng"}</span>
+                                    <svg
+                                        className="h-4 w-4 text-blue-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 9l-7 7-7-7"
+                                        />
+                                    </svg>
                                 </div>
 
                                 {/* Dropdown */}
                                 {userDropdownOpen && (
-                                    <div className="absolute right-0 w-44 rounded-lg border bg-white shadow-lg z-50">
+                                    <div className="absolute right-0 z-50 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                                         <Link
                                             to="/thong-tin"
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:text-red-500"
+                                            className="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
                                         >
                                             Thông tin tài khoản
                                         </Link>
                                         <button
                                             onClick={logout}
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:text-red-500 cursor-pointer"
+                                            className="w-full px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
                                         >
                                             Đăng xuất
                                         </button>
