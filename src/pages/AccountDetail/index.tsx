@@ -3,11 +3,13 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import HeadLine from "~/components/Headline";
 import { formatNumber } from "~/utils/functions";
 import { FaArrowLeft } from "react-icons/fa";
+import { useAuth } from "~/context/AuthContext";
 
 export default function AccountDetailPage() {
     const { id } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const stateAccount = (location.state as { account?: Record<string, unknown> })?.account;
 
     const [account, setAccount] = useState<Record<string, unknown> | null>(stateAccount ?? null);
@@ -42,20 +44,63 @@ export default function AccountDetailPage() {
     const handlePurchase = async () => {
         if (!id || purchasing) return;
 
+        // Check if user is logged in
+        if (!user?.access_token) {
+            alert("Vui lòng đăng nhập để mua tài khoản!");
+            navigate("/login");
+            return;
+        }
+
         try {
             setPurchasing(true);
+
+            // Step 1: Purchase the account
             const res = await fetch(`http://localhost:8000/game-accounts/${id}/purchase`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.access_token}`,
                 },
             });
 
             const data = await res.json();
 
             if (res.ok) {
+                // Step 2: Update account status to 1 (sold)
+                if (account) {
+                    // Prepare images as string (array or JSON string)
+                    let imagesStr = "";
+                    const imgs = account["images"];
+                    if (Array.isArray(imgs)) {
+                        imagesStr = JSON.stringify(imgs);
+                    } else if (typeof imgs === "string") {
+                        imagesStr = imgs;
+                    }
+
+                    const updatePayload = {
+                        name: String(account["name"] || ""),
+                        accountName: String(account["accountName"] || ""),
+                        password: String(account["password"] || ""),
+                        price: Number(account["price"] || 0),
+                        thumb: String(account["thumb"] || ""),
+                        images: imagesStr,
+                        details: account["details"] ? JSON.stringify(account["details"]) : "",
+                        status: 1, // Update status to sold
+                    };
+
+                    await fetch(`http://localhost:8000/game-accounts/account-detail/${id}`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${user.access_token}`,
+                        },
+                        body: JSON.stringify(updatePayload),
+                    });
+                }
+
                 setPurchaseSuccess(true);
-                // Reload account data to update status
+
+                // Step 3: Reload account data to get updated status
                 const accountRes = await fetch(`http://localhost:8000/game-accounts/detail/${id}`);
                 const accountData = await accountRes.json();
                 setAccount(accountData.result ?? null);

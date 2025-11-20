@@ -3,20 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "~/context/AuthContext";
 import { formatNumber } from "~/utils/functions";
 
-// Dữ liệu user login
-const userData = {
-    id: 1,
-    name: "Nguyen Van A",
-    password: 123456,
-    phone: "0812665001",
-    email: "dragonnight1701@gmail.com",
-    createdAt: "16-11-2025",
-    status: "Đang hoạt động",
-    balance: "100000",
-    role: "admin",
-    avatar: "/images/default-avatar.png",
-};
-
 // Dữ liệu mẫu các user khác (dùng cho admin)
 const usersList = [
     { id: 1, name: "Nguyen Van A", email: "a@gmail.com", role: "member" },
@@ -29,15 +15,33 @@ const AccountPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    // States for user profile
+    const [userProfile, setUserProfile] = useState<Record<string, unknown> | null>(null);
+    const [loadingProfile, setLoadingProfile] = useState(false);
+    const [profileError, setProfileError] = useState<string | null>(null);
+
     // States for purchase history
     const [purchaseHistory, setPurchaseHistory] = useState<Array<Record<string, unknown>>>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [historyError, setHistoryError] = useState<string | null>(null);
 
+    // States for service orders
+    const [serviceOrders, setServiceOrders] = useState<Array<Record<string, unknown>>>([]);
+    const [loadingOrders, setLoadingOrders] = useState(false);
+    const [ordersError, setOrdersError] = useState<string | null>(null);
+
     // States for admin account management
     const [accounts, setAccounts] = useState<Array<Record<string, unknown>>>([]);
     const [loadingAccounts, setLoadingAccounts] = useState(false);
     const [accountsError, setAccountsError] = useState<string | null>(null);
+
+    // Fetch user profile when component mounts or when info tab is active
+    useEffect(() => {
+        if (user?.access_token && (activeTab === "info" || !userProfile)) {
+            fetchUserProfile();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, user]);
 
     // Fetch purchase history when history tab is active
     useEffect(() => {
@@ -47,13 +51,46 @@ const AccountPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, user]);
 
-    // Fetch accounts for admin when accounts tab is active
+    // Fetch service orders when orders tab is active
     useEffect(() => {
-        if (activeTab === "accounts" && user?.access_token && userData.role === "admin") {
-            fetchAccounts();
+        if (activeTab === "orders" && user?.access_token) {
+            fetchServiceOrders();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, user]);
+
+    // Fetch accounts for admin when accounts tab is active
+    useEffect(() => {
+        if (activeTab === "accounts" && user?.access_token && userProfile?.role === "ADMIN") {
+            fetchAccounts();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, user, userProfile]);
+
+    const fetchUserProfile = async () => {
+        try {
+            setLoadingProfile(true);
+            setProfileError(null);
+
+            const response = await fetch("http://localhost:8000/auth/profile", {
+                headers: {
+                    Authorization: `Bearer ${user?.access_token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setUserProfile(data.result);
+            } else {
+                setProfileError(data.message || "Không thể tải thông tin tài khoản");
+            }
+        } catch (error) {
+            setProfileError(error instanceof Error ? error.message : "Có lỗi xảy ra");
+        } finally {
+            setLoadingProfile(false);
+        }
+    };
 
     const fetchPurchaseHistory = async () => {
         try {
@@ -83,6 +120,32 @@ const AccountPage = () => {
             setHistoryError(error instanceof Error ? error.message : "Có lỗi xảy ra");
         } finally {
             setLoadingHistory(false);
+        }
+    };
+
+    const fetchServiceOrders = async () => {
+        try {
+            setLoadingOrders(true);
+            setOrdersError(null);
+
+            const response = await fetch("http://localhost:8000/orders/my-orders", {
+                headers: {
+                    Authorization: `Bearer ${user?.access_token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const items = Array.isArray(data.result) ? data.result : [];
+                setServiceOrders(items);
+            } else {
+                setOrdersError(data.message || "Không thể tải lịch sử đặt dịch vụ");
+            }
+        } catch (error) {
+            setOrdersError(error instanceof Error ? error.message : "Có lỗi xảy ra");
+        } finally {
+            setLoadingOrders(false);
         }
     };
 
@@ -145,7 +208,7 @@ const AccountPage = () => {
     const userTabs = [
         { id: "info", label: "Thông tin tài khoản" },
         { id: "history", label: "Lịch sử mua nick" },
-        { id: "deposit", label: "Nạp tiền" },
+        { id: "orders", label: "Lịch sử đặt dịch vụ" },
     ];
 
     const adminTabs = [
@@ -153,7 +216,19 @@ const AccountPage = () => {
         { id: "accounts", label: "Quản lý account game" },
     ];
 
-    const tabs = userData.role === "admin" ? [...userTabs, ...adminTabs] : userTabs;
+    const tabs = userProfile?.role === "ADMIN" ? [...userTabs, ...adminTabs] : userTabs;
+
+    const formatDate = (dateString: string) => {
+        try {
+            return new Date(dateString).toLocaleDateString("vi-VN", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            });
+        } catch {
+            return dateString;
+        }
+    };
 
     return (
         <div className="container mx-auto my-8 flex flex-col gap-6 lg:flex-row">
@@ -161,12 +236,16 @@ const AccountPage = () => {
             <aside className="w-full rounded-lg bg-white p-5 shadow-md lg:w-1/4">
                 <div className="mb-6 flex flex-col items-center">
                     <img
-                        src={userData.avatar}
-                        alt={userData.name}
+                        src="https://www.creocommunity.com/wp-content/uploads/2024/05/League-of-Legends-Decouvrez-le-magnifique-skin-Hall-of-768x432.jpg"
+                        alt={String(userProfile?.username ?? "User")}
                         className="mb-2 h-24 w-24 rounded-full object-cover shadow-sm"
                     />
-                    <h2 className="text-xl font-semibold">{userData.name}</h2>
-                    <span className="text-sm text-gray-500">{userData.status}</span>
+                    <h2 className="text-xl font-semibold">
+                        {String(userProfile?.username ?? user?.name ?? "Người dùng")}
+                    </h2>
+                    <span className="text-sm text-gray-500">
+                        {userProfile?.role === "ADMIN" ? "Quản trị viên" : "Thành viên"}
+                    </span>
                 </div>
                 <ul className="flex flex-col gap-2">
                     {tabs.map((tab) => (
@@ -192,40 +271,71 @@ const AccountPage = () => {
                 {activeTab === "info" && (
                     <div className="space-y-4">
                         <h3 className="mb-3 text-2xl font-semibold">Thông tin cá nhân</h3>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div>
-                                <p className="text-gray-500">Tên đăng nhập</p>
-                                <p className="font-medium">{userData.name}</p>
+
+                        {loadingProfile ? (
+                            <div className="flex justify-center py-8">
+                                <p className="text-gray-500">Đang tải...</p>
                             </div>
-                            <div>
-                                <p className="text-gray-500">Password</p>
-                                <p className="font-medium">{userData.password}</p>
+                        ) : profileError ? (
+                            <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                                <p>{profileError}</p>
                             </div>
-                            <div>
-                                <p className="text-gray-500">Email</p>
-                                <p className="font-medium">{userData.email}</p>
+                        ) : !userProfile ? (
+                            <div className="rounded border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-600">
+                                <p>Không thể tải thông tin tài khoản</p>
                             </div>
-                            <div>
-                                <p className="text-gray-500">Số dư</p>
-                                <p className="font-medium">{userData.balance}</p>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <div>
+                                    <p className="text-gray-500">Tên đăng nhập</p>
+                                    <p className="font-medium">{String(userProfile.username ?? "N/A")}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Email</p>
+                                    <p className="font-medium">{String(userProfile.email ?? "N/A")}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Mật khẩu</p>
+                                    <p className="font-medium">••••••••</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Role</p>
+                                    <p className="font-medium">
+                                        {userProfile.role === "ADMIN" ? "Quản trị viên" : "Người dùng"}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Số dư</p>
+                                    <p className="font-medium text-green-600">
+                                        {formatNumber(Number(userProfile.balance ?? 0))} ₫
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Tổng nạp</p>
+                                    <p className="font-medium text-blue-600">
+                                        {formatNumber(Number(userProfile.totalDeposited ?? 0))} ₫
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Ngày tạo tài khoản</p>
+                                    <p className="font-medium">
+                                        {userProfile.createdAt ? formatDate(String(userProfile.createdAt)) : "N/A"}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-gray-500">Số điện thoại</p>
-                                <p className="font-medium">{userData.phone}</p>
+                        )}
+
+                        {/* Change Password Button */}
+                        {userProfile && (
+                            <div className="mt-6 flex justify-end">
+                                <button
+                                    onClick={() => navigate("/change-password")}
+                                    className="rounded-lg bg-blue-500 px-6 py-2.5 font-semibold text-white transition hover:bg-blue-600"
+                                >
+                                    Đổi mật khẩu
+                                </button>
                             </div>
-                            <div>
-                                <p className="text-gray-500">Role</p>
-                                <p className="font-medium">{userData.role}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-500">Ngày tạo tài khoản</p>
-                                <p className="font-medium">{userData.createdAt}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-500">Trạng thái</p>
-                                <p className="font-medium">{userData.status}</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 )}
 
@@ -279,14 +389,8 @@ const AccountPage = () => {
                                                           : "-"}
                                                 </td>
                                                 <td className="border px-4 py-2">
-                                                    <span
-                                                        className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
-                                                            Number(item.status) === 1
-                                                                ? "bg-green-100 text-green-800"
-                                                                : "bg-gray-100 text-gray-800"
-                                                        }`}
-                                                    >
-                                                        {Number(item.status) === 1 ? "Đã mua" : "Đã bán"}
+                                                    <span className="inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                                                        Đã mua
                                                     </span>
                                                 </td>
                                                 <td className="border px-4 py-2">
@@ -306,24 +410,98 @@ const AccountPage = () => {
                     </div>
                 )}
 
-                {/* Deposit */}
-                {activeTab === "deposit" && (
+                {/* Service Orders */}
+                {activeTab === "orders" && (
                     <div className="space-y-4">
-                        <h3 className="mb-3 text-2xl font-semibold">Nạp tiền</h3>
-                        <p>Chọn phương thức thanh toán và số tiền muốn nạp:</p>
-                        <div className="mt-4 flex flex-col gap-4 md:flex-row">
-                            <button className="flex-1 rounded-lg bg-green-500 py-3 font-semibold text-white transition hover:bg-green-600">
-                                Chuyển khoản ngân hàng
-                            </button>
-                            <button className="flex-1 rounded-lg bg-blue-500 py-3 font-semibold text-white transition hover:bg-blue-600">
-                                Ví điện tử
-                            </button>
-                        </div>
+                        <h3 className="mb-3 text-2xl font-semibold">Lịch sử đặt dịch vụ</h3>
+
+                        {loadingOrders ? (
+                            <div className="flex justify-center py-8">
+                                <p className="text-gray-500">Đang tải...</p>
+                            </div>
+                        ) : ordersError ? (
+                            <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                                <p>{ordersError}</p>
+                            </div>
+                        ) : serviceOrders.length === 0 ? (
+                            <div className="rounded border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-600">
+                                <p>Chưa có lịch sử đặt dịch vụ nào.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full border-collapse border border-gray-200">
+                                    <thead>
+                                        <tr className="bg-gray-100">
+                                            <th className="border px-4 py-2 text-left">Dịch vụ</th>
+                                            <th className="border px-4 py-2 text-left">Gói</th>
+                                            <th className="border px-4 py-2 text-left">Tài khoản</th>
+                                            <th className="border px-4 py-2 text-left">Giá</th>
+                                            <th className="border px-4 py-2 text-left">Ngày đặt</th>
+                                            <th className="border px-4 py-2 text-left">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {serviceOrders.map((order, index) => {
+                                            const service = order.service as Record<string, unknown> | undefined;
+                                            const pkg = order.package as Record<string, unknown> | undefined;
+                                            const status = Number(order.status ?? 0);
+
+                                            return (
+                                                <tr key={String(order.id ?? index)} className="hover:bg-gray-50">
+                                                    <td className="border px-4 py-2">
+                                                        <span className="font-medium">
+                                                            {service ? String(service.name ?? "N/A") : "N/A"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="border px-4 py-2">
+                                                        {pkg ? String(pkg.name ?? "N/A") : "N/A"}
+                                                    </td>
+                                                    <td className="border px-4 py-2 text-sm">
+                                                        <div>{String(order.accountName ?? "N/A")}</div>
+                                                    </td>
+                                                    <td className="border px-4 py-2">
+                                                        <span className="font-semibold text-blue-600">
+                                                            {formatNumber(Number(order.price ?? 0))} ₫
+                                                        </span>
+                                                    </td>
+                                                    <td className="border px-4 py-2">
+                                                        {order.createdAt
+                                                            ? new Date(String(order.createdAt)).toLocaleDateString(
+                                                                  "vi-VN",
+                                                              )
+                                                            : "-"}
+                                                    </td>
+                                                    <td className="border px-4 py-2">
+                                                        <span
+                                                            className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
+                                                                status === 1
+                                                                    ? "bg-green-100 text-green-800"
+                                                                    : status === 2
+                                                                      ? "bg-blue-100 text-blue-800"
+                                                                      : "bg-yellow-100 text-yellow-800"
+                                                            }`}
+                                                        >
+                                                            {status === 0
+                                                                ? "Chờ xử lý"
+                                                                : status === 1
+                                                                  ? "Đang xử lý"
+                                                                  : status === 2
+                                                                    ? "Hoàn thành"
+                                                                    : "Hủy"}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 )}
 
                 {/* Admin: Quản lý user */}
-                {activeTab === "users" && userData.role === "admin" && (
+                {activeTab === "users" && userProfile?.role === "ADMIN" && (
                     <div className="space-y-4">
                         <h3 className="mb-3 text-2xl font-semibold">Quản lý user</h3>
                         <table className="w-full border-collapse border border-gray-200">
@@ -365,7 +543,7 @@ const AccountPage = () => {
                 )}
 
                 {/* Admin: Quản lý account game */}
-                {activeTab === "accounts" && userData.role === "admin" && (
+                {activeTab === "accounts" && userProfile?.role === "ADMIN" && (
                     <div className="space-y-4">
                         <h3 className="mb-3 text-2xl font-semibold">Quản lý account game</h3>
 

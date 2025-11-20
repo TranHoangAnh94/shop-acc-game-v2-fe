@@ -5,7 +5,7 @@ import { FaRegUser, FaFacebookF, FaYoutube } from "react-icons/fa";
 import { IoMdLogIn } from "react-icons/io";
 import { FiUserPlus } from "react-icons/fi";
 import { formatPhone } from "../utils/functions";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import type { ReactNode } from "react";
 
@@ -32,6 +32,7 @@ function NavLink({ href, active, children }: NavLinkType) {
 const Header = () => {
     const location = useLocation();
     const url = location.pathname;
+    const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -109,20 +110,6 @@ const Header = () => {
                                     </div>
 
                                     <span className="truncate text-sm">{user.name || "Người dùng"}</span>
-                                    <svg
-                                        className="h-4 w-4 text-blue-400"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M19 9l-7 7-7-7"
-                                        />
-                                    </svg>
                                 </div>
 
                                 {/* Dropdown */}
@@ -135,7 +122,7 @@ const Header = () => {
                                             Thông tin tài khoản
                                         </Link>
                                         <button
-                                            onClick={logout}
+                                            onClick={() => logout(navigate)}
                                             className="w-full px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
                                         >
                                             Đăng xuất

@@ -8,7 +8,7 @@ type AnyObject = Record<string, unknown>;
 interface AuthContextType {
     user: AnyObject | null;
     login: (userData: AnyObject) => void;
-    logout: () => void;
+    logout: (navigate?: (path: string) => void) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("user", JSON.stringify(minimal));
     };
 
-    const logout = () => {
+    const logout = (navigate?: (path: string) => void) => {
         setUser(null);
         localStorage.removeItem("user");
         // remove tokens from cookies if present
@@ -44,6 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             eraseCookie("refresh_token");
         } catch {
             // ignore
+        }
+        // redirect to login page if navigate function provided
+        if (navigate) {
+            navigate("/login");
         }
     };
 

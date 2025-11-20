@@ -92,6 +92,10 @@ export default function GroupAccountsPage() {
     const filtered = useMemo(() => {
         const range = PRICE_RANGES.find((r) => r.key === priceRange) ?? PRICE_RANGES[0];
         return accounts.filter((a) => {
+            // Only show accounts with status = 0 (available for sale)
+            const status = Number(a["status"] ?? 0);
+            if (status !== 0) return false;
+
             const price = Number(a["price"] ?? 0) || 0;
             if (range.key !== "all") {
                 if (typeof range.max === "number") {

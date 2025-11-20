@@ -108,7 +108,7 @@ const Login = () => {
 
                 <div className="mt-5 flex flex-wrap items-center justify-end gap-4">
                     <div className="text-sm">
-                        <Link to={"/"} className="ht-item-achor">
+                        <Link to={"/forgot-password"} className="ht-item-achor">
                             Bạn Quên Mật Khẩu?
                         </Link>
                     </div>
