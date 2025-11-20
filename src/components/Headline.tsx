@@ -7,7 +7,7 @@ interface HeaderlineType {
     title: string;
     url?: string;
     customHeading?: string;
-    type?: "account" | "group" | "";
+    type?: "account" | "group" | "" | "service";
 }
 export default function HeadLine({ title, url = "", customHeading = "", type = "" }: HeaderlineType) {
     const iconMap = {

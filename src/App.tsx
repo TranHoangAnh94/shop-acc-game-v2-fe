@@ -14,6 +14,7 @@ import AccountPage from "./pages/Account";
 import AddUserPage from "./pages/Account/AddUser";
 import AddAccountPage from "./pages/Account/AddAccount";
 import EditAccountPage from "./pages/Account/EditAccount";
+import ServicePackagesPage from "./pages/ServicePackages";
 
 const queryClient = new QueryClient();
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
                             <Route path="categories/:id" element={<CategoryGroupsPage />} />
                             <Route path="group/:id/accounts" element={<GroupAccountsPage />} />
                             <Route path="accounts/:id" element={<AccountDetailPage />} />
+                            <Route path="dich-vu/:serviceId" element={<ServicePackagesPage />} />
                             <Route path="/thong-tin" element={<AccountPage />} />
                             <Route path="/login" element={<AuthenticationLayout title="Đăng Nhập" page="login" />}>
                                 <Route index element={<Login />} />

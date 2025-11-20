@@ -15,7 +15,7 @@ interface CategoriesType {
     categories: CategoryItemType[];
     url: string;
     urlIconImage: string;
-    type: "account" | "group" | "";
+    type: "account" | "group" | "" | "service";
 }
 
 export default function Categories({ nameCategory, categories, url = "/", urlIconImage, type }: CategoriesType) {
